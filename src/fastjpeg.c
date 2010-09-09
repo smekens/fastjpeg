@@ -115,18 +115,13 @@ bool fastjpeg_prepare_in(fastjpeg_t *fastjpeg)
 	if(fastjpeg->marker != NULL) fastjpeg_marker_delete(fastjpeg->marker);
 	fastjpeg->marker = fastjpeg_marker_new();
 
-	uint16_t marker;
-//	uint16_t marker, size;
-//	uint8_t *buff = NULL;
-
-	/* Read SOI marker */
-//	if(fastjpeg_read_word(fastjpeg, &marker) == false) return false;
-//	if(marker != FASTJPEG_MARKER_SOI) return false;
-
 	/* Read sections */
 	int i;
 	for(i = 0; ; i++)
 	{
+		uint16_t size;
+		uint16_t marker;
+
 		/* Read marker */
 		if(fastjpeg_read_word(fastjpeg, &marker) == false) return false;
 
@@ -143,6 +138,61 @@ bool fastjpeg_prepare_in(fastjpeg_t *fastjpeg)
 				fastjpeg->marker->eoi = true;
 				printf("EOI ok \n");
 				goto END_LOOP;
+				break;
+
+			case FASTJPEG_MARKER_APP0:
+				if(fastjpeg_read_word(fastjpeg, &size) == false) return false;
+				size -= 2;
+
+				printf("Reading APP0 section. Size: %d\n", size);
+
+				fastjpeg->marker->data[0] = (uint8_t *) fastjpeg_malloc(size);
+				if(fastjpeg->marker->data[0] == NULL) return false;
+				if(fastjpeg_read_buffer(fastjpeg, fastjpeg->marker->data[0], size) == false) return false;
+				break;
+
+			case FASTJPEG_MARKER_DQT:
+				if(fastjpeg_read_word(fastjpeg, &size) == false) return false;
+				size -= 2;
+
+				printf("Reading DQT section. Size: %d\n", size);
+
+				fastjpeg->marker->data[1] = (uint8_t *) fastjpeg_malloc(size);
+				if(fastjpeg->marker->data[1] == NULL) return false;
+				if(fastjpeg_read_buffer(fastjpeg, fastjpeg->marker->data[1], size) == false) return false;
+				break;
+
+			case FASTJPEG_MARKER_SOF0:
+				if(fastjpeg_read_word(fastjpeg, &size) == false) return false;
+				size -= 2;
+
+				printf("Reading SOF0 section. Size: %d\n", size);
+
+				fastjpeg->marker->data[2] = (uint8_t *) fastjpeg_malloc(size);
+				if(fastjpeg->marker->data[2] == NULL) return false;
+				if(fastjpeg_read_buffer(fastjpeg, fastjpeg->marker->data[2], size) == false) return false;
+				break;
+
+			case FASTJPEG_MARKER_DHT:
+				if(fastjpeg_read_word(fastjpeg, &size) == false) return false;
+				size -= 2;
+
+				printf("Reading DHT section. Size: %d\n", size);
+
+				fastjpeg->marker->data[3] = (uint8_t *) fastjpeg_malloc(size);
+				if(fastjpeg->marker->data[3] == NULL) return false;
+				if(fastjpeg_read_buffer(fastjpeg, fastjpeg->marker->data[3], size) == false) return false;
+				break;
+
+			case FASTJPEG_MARKER_SOS:
+				if(fastjpeg_read_word(fastjpeg, &size) == false) return false;
+				size -= 2;
+
+				printf("Reading SOS section. Size: %d\n", size);
+
+				fastjpeg->marker->data[4] = (uint8_t *) fastjpeg_malloc(size);
+				if(fastjpeg->marker->data[4] == NULL) return false;
+				if(fastjpeg_read_buffer(fastjpeg, fastjpeg->marker->data[4], size) == false) return false;
 				break;
 
 //			default:
