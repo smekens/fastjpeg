@@ -21,7 +21,7 @@
 /*--------------------------------------------------------------------------*/
 
 struct fastjpeg_io_s;
-struct fastjpeg_marker_data;
+struct fastjpeg_marker_s;
 
 /*--------------------------------------------------------------------------*/
 
@@ -33,7 +33,7 @@ typedef struct fastjpeg_s
 
 	struct fastjpeg_io_s *io;
 
-	struct fastjpeg_marker_data *marker_data;
+	struct fastjpeg_marker_s *marker;
 
 	struct fastjpeg_jfif_header_s *jfif_header;
 

@@ -67,15 +67,18 @@ DLL_PUBLIC int fastjpeg_memory_get_line(buff_t);
 /* FASTJPEG */
 /*--------------------------------------------------------------------------*/
 
-typedef struct fastjpeg_marker_data_s
+typedef struct fastjpeg_marker_s
 {
 	bool soi;
 	bool eoi;
 
-	size_t size[64]
+	size_t size[64];
 	uint8_t *data[64];
 
-} fastjpeg_marker_data_t;
+} fastjpeg_marker_t;
+
+struct fastjpeg_marker_s *fastjpeg_marker_new(void);
+void fastjpeg_marker_delete(struct fastjpeg_marker_s *marker);
 
 /*--------------------------------------------------------------------------*/
 

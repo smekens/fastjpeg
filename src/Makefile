@@ -19,10 +19,10 @@ SRCS = \
 	$(SRC_DIR)/decode.c \
 	$(SRC_DIR)/encode.c \
 	$(SRC_DIR)/fastjpeg.c \
-	$(SRC_DIR)/image.c \
 	$(SRC_DIR)/io.c \
 	$(SRC_DIR)/jfif.c \
 	$(SRC_DIR)/main.c \
+	$(SRC_DIR)/marker.c \
 	$(SRC_DIR)/memory.c \
 	$(SRC_DIR)/panic.c
 

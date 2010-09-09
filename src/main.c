@@ -42,7 +42,6 @@ int main(int argc, char **argv)
 
 	fastjpeg_terminate(fastjpeg);
 
-
 	/* Cleaning */
 	fastjpeg_free(buff);
 	fastjpeg_delete(fastjpeg);

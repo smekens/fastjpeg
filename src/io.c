@@ -87,7 +87,7 @@ static void stream_init(fastjpeg_io_descr_t descr)
 
 static long stream_read(fastjpeg_io_descr_t descr, uint8_t *buff, size_t size)
 {
-	return fread(buff, size, 1, (FILE *) descr.data[0]);
+	return fread(buff, 1, size, (FILE *) descr.data[0]);
 }
 
 static bool stream_skip(fastjpeg_io_descr_t descr, size_t size)

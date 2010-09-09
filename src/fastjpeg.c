@@ -14,14 +14,7 @@ fastjpeg_t *fastjpeg_new(void)
 void fastjpeg_delete(fastjpeg_t *fastjpeg)
 {
 	if(fastjpeg->io != NULL) fastjpeg_io_delete(fastjpeg->io);
-
-	int i;
-	for(i = 0; i < 64; i++)
-	{
-		if(fastjpeg->marker[i] != NULL) {
-			fastjpeg_free(fastjpeg->app_sections[i]);
-		}
-	}
+	if(fastjpeg->marker != NULL) fastjpeg_marker_delete(fastjpeg->marker);
 
 	fastjpeg_free(fastjpeg);
 }
@@ -48,7 +41,7 @@ bool fastjpeg_read_word(struct fastjpeg_s *fastjpeg, uint16_t *value)
 {
 	bool result;
 
-	if(fastjpeg->io->read(fastjpeg->io->descr, value, 2) == 2)
+	if(fastjpeg->io->read(fastjpeg->io->descr, (uint8_t *) value, 2) == 2)
 	{
 		*value = endian_word(*value);
 		result = true;
@@ -66,7 +59,7 @@ bool fastjpeg_read_dword(struct fastjpeg_s *fastjpeg, uint32_t *value)
 {
 	bool result;
 
-	if(fastjpeg->io->read(fastjpeg->io->descr, value, 4) == 4)
+	if(fastjpeg->io->read(fastjpeg->io->descr, (uint8_t *) value, 4) == 4)
 	{
 		*value = endian_dword(*value);
 		result = true;
@@ -84,7 +77,7 @@ bool fastjpeg_read_qword(struct fastjpeg_s *fastjpeg, uint64_t *value)
 {
 	bool result;
 
-	if(fastjpeg->io->read(fastjpeg->io->descr, value, 8) == 8)
+	if(fastjpeg->io->read(fastjpeg->io->descr, (uint8_t *) value, 8) == 8)
 	{
 		*value = endian_qword(*value);
 		result = true;
@@ -102,9 +95,7 @@ bool fastjpeg_read_buffer(struct fastjpeg_s *fastjpeg, uint8_t *buff, size_t siz
 {
 	bool result;
 
-	if(fastjpeg->io->read(fastjpeg->io->descr, buff, size) == size)
-	{
-		*value = endian_word(*value);
+	if(fastjpeg->io->read(fastjpeg->io->descr, buff, size) == size) {
 		result = true;
 	}
 	else {
@@ -118,41 +109,52 @@ bool fastjpeg_read_buffer(struct fastjpeg_s *fastjpeg, uint8_t *buff, size_t siz
 
 bool fastjpeg_prepare_in(fastjpeg_t *fastjpeg)
 {
-	int rs;
-	uint16_t marker, size;
-	uint8_t *buff = NULL;
+	printf("Start preparing\n");
+
+	/* Allocate memory for marker */
+	if(fastjpeg->marker != NULL) fastjpeg_marker_delete(fastjpeg->marker);
+	fastjpeg->marker = fastjpeg_marker_new();
+
+	uint16_t marker;
+//	uint16_t marker, size;
+//	uint8_t *buff = NULL;
 
 	/* Read SOI marker */
-	if(fastjpeg_read_word(fastjpeg, &marker) == false) return false;
-	if(marker != FASTJPEG_MARKER_SOI) return false;
+//	if(fastjpeg_read_word(fastjpeg, &marker) == false) return false;
+//	if(marker != FASTJPEG_MARKER_SOI) return false;
 
 	/* Read sections */
-	for(;;)
+	int i;
+	for(i = 0; ; i++)
 	{
 		/* Read marker */
 		if(fastjpeg_read_word(fastjpeg, &marker) == false) return false;
 
+		printf("%02d, marker: 0x%04x\n", i, marker);
+
 		switch(marker)
 		{
 			case FASTJPEG_MARKER_SOI:
-				fastjpeg->marker_data->soi = true;
+				fastjpeg->marker->soi = true;
+				printf("SOI ok \n");
 				break;
 
-			case FASTJPEG_MARKER_SOI:
-				fastjpeg->marker_data->soi = true;
+			case FASTJPEG_MARKER_EOI:
+				fastjpeg->marker->eoi = true;
+				printf("EOI ok \n");
 				goto END_LOOP;
 				break;
 
-			default:
-				if(marker < 0xFFC0) return false;
-
-				if(fastjpeg_read_word(fastjpeg, &size) == false) return false;
-
-				buff = (uint8_t *) fastjpeg_malloc(size);
-				fastjpeg->marker->app_size[marker & 0x3F] = size;
-				fastjpeg->marker->app_data[marker & 0x3F] = buff;
-
-				break;
+//			default:
+//				if(marker < 0xFFC0) return false;
+//
+//				if(fastjpeg_read_word(fastjpeg, &size) == false) return false;
+//
+//				buff = (uint8_t *) fastjpeg_malloc(size);
+//				fastjpeg->marker->app_size[marker & 0x3F] = size;
+//				fastjpeg->marker->app_data[marker & 0x3F] = buff;
+//
+//				break;
 
 			default:
 				printf("Error: marker not valid 0x%04x\n", marker);
