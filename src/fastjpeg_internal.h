@@ -72,6 +72,10 @@ typedef struct fastjpeg_marker_s
 	bool soi;
 	bool eoi;
 
+	size_t app0_size;
+	uint8_t *app0_data;
+
+	
 	size_t size[64];
 	uint8_t *data[64];
 
