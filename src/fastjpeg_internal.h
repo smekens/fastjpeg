@@ -67,22 +67,36 @@ DLL_PUBLIC int fastjpeg_memory_get_line(buff_t);
 /* FASTJPEG */
 /*--------------------------------------------------------------------------*/
 
-typedef struct fastjpeg_marker_s
+typedef struct fastjpeg_dqt_s
 {
-	bool soi;
-	bool eoi;
+	enum {
+		FASTJPEG_DQT_ID_0 = 0,
+		FASTJPEG_DQT_ID_1,
+		FASTJPEG_DQT_ID_2,
+		FASTJPEG_DQT_ID_3
 
-	size_t app0_size;
-	uint8_t *app0_data;
+	} id;
 
-	
-	size_t size[64];
-	uint8_t *data[64];
+	enum {
+		FASTJPEG_DQT_SIZE_BYTE = 0,
+		FASTJPEG_DQT_SIZE_WORD,
 
-} fastjpeg_marker_t;
+	} size;
 
-struct fastjpeg_marker_s *fastjpeg_marker_new(void);
-void fastjpeg_marker_delete(struct fastjpeg_marker_s *marker);
+	union
+	{
+		uint8_t *byte;
+		uint16_t *word;
+
+	} data;
+
+} fastjpeg_dqt_t;
+
+struct fastjpeg_dqt_s *fastjpeg_dqt_new(void);
+struct fastjpeg_dqt_s *fastjpeg_dqt_extract(uint8_t *buffer, size_t size);
+void fastjpeg_dqt_delete(struct fastjpeg_dqt_s *dqt);
+
+void fastjpeg_dqt_dump(struct fastjpeg_dqt_s *dqt);
 
 /*--------------------------------------------------------------------------*/
 
@@ -242,6 +256,7 @@ struct fastjpeg_jfif_header_s *fastjpeg_jfif_header_new(void);
 struct fastjpeg_jfif_header_s *fastjpeg_jfif_header_extract(uint8_t *buff, size_t size);
 
 void fastjpeg_jfif_header_delete(struct fastjpeg_jfif_header_s *jfif_header);
+void fastjpeg_jfif_header_dump(struct fastjpeg_jfif_header_s *jfif_header);
 
 /*--------------------------------------------------------------------------*/
 

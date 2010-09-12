@@ -38,6 +38,22 @@ struct fastjpeg_jfif_header_s *fastjpeg_jfif_header_extract(uint8_t *buff, size_
 void fastjpeg_jfif_header_delete(struct fastjpeg_jfif_header_s *jfif_header)
 {
 	if(jfif_header->thumbnail != NULL) fastjpeg_free(jfif_header->thumbnail);
+
+	fastjpeg_free(jfif_header);
+}
+
+/*--------------------------------------------------------------------------*/
+
+void fastjpeg_jfif_header_dump(fastjpeg_jfif_header_t *jfif_header)
+{
+	printf("DUMP: ===== JFIF Header\n");
+	printf("DUMP:    id: %c%c%c%c%c\n", jfif_header->id[0], jfif_header->id[1],
+		jfif_header->id[2], jfif_header->id[3], jfif_header->id[4]);
+	printf("DUMP:    version: %d.%d\n", jfif_header->version_major, jfif_header->version_minor);
+	printf("DUMP:    units: %d\n", jfif_header->units);
+	printf("DUMP:    density: %d, %d\n", jfif_header->x_density, jfif_header->y_density);
+	printf("DUMP:    thumbnail size: %dx%d\n", jfif_header->x_thumbnail, jfif_header->y_thumbnail);
+	printf("DUMP:\n");
 }
 
 /*--------------------------------------------------------------------------*/

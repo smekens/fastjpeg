@@ -33,10 +33,11 @@ typedef struct fastjpeg_s
 
 	struct fastjpeg_io_s *io;
 
-	struct fastjpeg_marker_s *marker;
+	bool found_soi;
+	bool found_eoi;
 
 	struct fastjpeg_jfif_header_s *jfif_header;
-
+	struct fastjpeg_dqt_s *dqt[4];
 
 } fastjpeg_t;
 
