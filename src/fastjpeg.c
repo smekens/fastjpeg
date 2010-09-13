@@ -22,6 +22,8 @@ void fastjpeg_delete(fastjpeg_t *fastjpeg)
 	if(fastjpeg->dqt[2] != NULL) fastjpeg_dqt_delete(fastjpeg->dqt[2]);
 	if(fastjpeg->dqt[3] != NULL) fastjpeg_dqt_delete(fastjpeg->dqt[3]);
 
+	if(fastjpeg->sof != NULL) fastjpeg_sof_delete(fastjpeg->sof);
+
 	fastjpeg_free(fastjpeg);
 }
 
@@ -154,7 +156,6 @@ bool fastjpeg_prepare_in(fastjpeg_t *fastjpeg)
 				fastjpeg->jfif_header = fastjpeg_jfif_header_extract(buffer, size);
 				fastjpeg_jfif_header_dump(fastjpeg->jfif_header);
 				fastjpeg_free(buffer);
-
 				break;
 
 			case FASTJPEG_MARKER_DQT:
@@ -167,28 +168,28 @@ bool fastjpeg_prepare_in(fastjpeg_t *fastjpeg)
 				fastjpeg->dqt[dqt->id] = dqt;
 				fastjpeg_dqt_dump(dqt);
 				fastjpeg_free(buffer);
-
 				break;
 
 			case FASTJPEG_MARKER_SOF0:
 				if(fastjpeg_read_word(fastjpeg, &size) == false) return false;
 				size -= 2;
 
-				printf("Reading SOF0 section. Size: %d\n", size);
-
-//				fastjpeg->marker->data[2] = (uint8_t *) fastjpeg_malloc(size);
-//				if(fastjpeg_read_buffer(fastjpeg, fastjpeg->marker->data[2], size) == false) return false;
-//				break;
+				buffer = (uint8_t *) fastjpeg_malloc(size);
+				if(fastjpeg_read_buffer(fastjpeg, buffer, size) == false) return false;
+				fastjpeg->sof = fastjpeg_sof_extract(buffer, size);
+				fastjpeg_sof_dump(fastjpeg->sof);
+				fastjpeg_free(buffer);
+				break;
 
 			case FASTJPEG_MARKER_DHT:
 				if(fastjpeg_read_word(fastjpeg, &size) == false) return false;
 				size -= 2;
 
-				printf("Reading DHT section. Size: %d\n", size);
-
-//				fastjpeg->marker->data[3] = (uint8_t *) fastjpeg_malloc(size);
-//				if(fastjpeg->marker->data[3] == NULL) return false;
-//				if(fastjpeg_read_buffer(fastjpeg, fastjpeg->marker->data[3], size) == false) return false;
+				buffer = (uint8_t *) fastjpeg_malloc(size);
+				if(fastjpeg_read_buffer(fastjpeg, buffer, size) == false) return false;
+				fastjpeg->dht = fastjpeg_dht_extract(buffer, size);
+				fastjpeg_dht_dump(fastjpeg->dht);
+				fastjpeg_free(buffer);
 				break;
 
 			case FASTJPEG_MARKER_SOS:

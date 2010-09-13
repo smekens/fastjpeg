@@ -38,6 +38,8 @@ typedef struct fastjpeg_s
 
 	struct fastjpeg_jfif_header_s *jfif_header;
 	struct fastjpeg_dqt_s *dqt[4];
+	struct fastjpeg_sof_s *sof;
+	struct fastjpeg_dht_s *dht;
 
 } fastjpeg_t;
 

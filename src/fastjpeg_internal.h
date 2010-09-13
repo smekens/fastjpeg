@@ -67,6 +67,14 @@ DLL_PUBLIC int fastjpeg_memory_get_line(buff_t);
 /* FASTJPEG */
 /*--------------------------------------------------------------------------*/
 
+bool fastjpeg_read_byte(struct fastjpeg_s *fastjpeg, uint8_t *value);
+bool fastjpeg_read_word(struct fastjpeg_s *fastjpeg, uint16_t *value);
+bool fastjpeg_read_dword(struct fastjpeg_s *fastjpeg, uint32_t *value);
+bool fastjpeg_read_qword(struct fastjpeg_s *fastjpeg, uint64_t *value);
+bool fastjpeg_read_buffer(struct fastjpeg_s *fastjpeg, uint8_t *value, size_t size);
+
+/*--------------------------------------------------------------------------*/
+
 typedef struct fastjpeg_dqt_s
 {
 	enum {
@@ -100,11 +108,75 @@ void fastjpeg_dqt_dump(struct fastjpeg_dqt_s *dqt);
 
 /*--------------------------------------------------------------------------*/
 
-bool fastjpeg_read_byte(struct fastjpeg_s *fastjpeg, uint8_t *value);
-bool fastjpeg_read_word(struct fastjpeg_s *fastjpeg, uint16_t *value);
-bool fastjpeg_read_dword(struct fastjpeg_s *fastjpeg, uint32_t *value);
-bool fastjpeg_read_qword(struct fastjpeg_s *fastjpeg, uint64_t *value);
-bool fastjpeg_read_buffer(struct fastjpeg_s *fastjpeg, uint8_t *value, size_t size);
+struct fastjpeg_sof_component_s;
+
+typedef struct fastjpeg_sof_s
+{
+	uint8_t precision;
+
+	uint16_t width;
+	uint16_t height;
+
+	uint8_t nb_component;
+	struct fastjpeg_sof_component_s *components;
+
+} fastjpeg_sof_t;
+
+typedef struct fastjpeg_sof_component_s
+{
+	uint8_t id;
+
+	uint8_t h_sampling;
+	uint8_t v_sampling;
+
+	uint8_t dqt_id;
+
+} fastjpeg_sof_component_t;
+
+struct fastjpeg_sof_s *fastjpeg_sof_new(void);
+struct fastjpeg_sof_s *fastjpeg_sof_extract(uint8_t *buffer, size_t size);
+void fastjpeg_sof_delete(struct fastjpeg_sof_s *sof);
+
+void fastjpeg_sof_dump(struct fastjpeg_sof_s *sof);
+
+/*--------------------------------------------------------------------------*/
+
+struct fastjpeg_huffman_table_s;
+
+typedef struct fastjpeg_dht_s
+{
+	size_t nb_table;
+
+	struct fastjpeg_huffman_table_s *table_list;
+
+} fastjpeg_dht_t;
+
+struct fastjpeg_dht_s *fastjpeg_dht_new(void);
+struct fastjpeg_dht_s *fastjpeg_dht_extract(uint8_t *buffer, size_t size);
+void fastjpeg_dht_delete(struct fastjpeg_dht_s *dht);
+
+void fastjpeg_dht_dump(struct fastjpeg_dht_s *dht);
+
+/**/
+
+typedef struct fastjpeg_huffman_table_s
+{
+	enum
+	{
+		FASTJPEG_HUFFMAN_TABLE_CLASS_DC = 0,
+		FASTJPEG_HUFFMAN_TABLE_CLASS_AC,
+	} table_class;
+
+	uint8_t id;
+
+	uint8_t code_length_list[16];
+
+	struct fastjpeg_huffman_table_s *prev, *next;
+
+} fastjpeg_huffman_table_t;
+
+struct fastjpeg_huffman_table_s *fastjpeg_huffman_table_new(void);
+void fastjpeg_huffman_table_delete(struct fastjpeg_huffman_table_s *dht);
 
 /*--------------------------------------------------------------------------*/
 /* IO */

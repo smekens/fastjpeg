@@ -17,6 +17,7 @@ CFLAGS = -Wall -Werror -g -O0
 
 SRCS = \
 	$(SRC_DIR)/decode.c \
+	$(SRC_DIR)/dht.c \
 	$(SRC_DIR)/dqt.c \
 	$(SRC_DIR)/encode.c \
 	$(SRC_DIR)/fastjpeg.c \
@@ -24,7 +25,8 @@ SRCS = \
 	$(SRC_DIR)/jfif.c \
 	$(SRC_DIR)/main.c \
 	$(SRC_DIR)/memory.c \
-	$(SRC_DIR)/panic.c
+	$(SRC_DIR)/panic.c \
+	$(SRC_DIR)/sof.c
 
 OBJS = $(SRCS:.c=.o)
 
