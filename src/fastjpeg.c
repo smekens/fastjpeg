@@ -24,6 +24,8 @@ void fastjpeg_delete(fastjpeg_t *fastjpeg)
 
 	if(fastjpeg->sof != NULL) fastjpeg_sof_delete(fastjpeg->sof);
 
+	if(fastjpeg->dht != NULL) fastjpeg_dht_delete(fastjpeg->dht);
+
 	fastjpeg_free(fastjpeg);
 }
 
@@ -187,7 +189,7 @@ bool fastjpeg_prepare_in(fastjpeg_t *fastjpeg)
 
 				buffer = (uint8_t *) fastjpeg_malloc(size);
 				if(fastjpeg_read_buffer(fastjpeg, buffer, size) == false) return false;
-				fastjpeg->dht = fastjpeg_dht_extract(buffer, size);
+				fastjpeg->dht = fastjpeg_dht_extract(fastjpeg->dht, buffer, size);
 				fastjpeg_dht_dump(fastjpeg->dht);
 				fastjpeg_free(buffer);
 				break;

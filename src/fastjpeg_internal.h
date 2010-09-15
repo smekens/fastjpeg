@@ -152,7 +152,8 @@ typedef struct fastjpeg_dht_s
 } fastjpeg_dht_t;
 
 struct fastjpeg_dht_s *fastjpeg_dht_new(void);
-struct fastjpeg_dht_s *fastjpeg_dht_extract(uint8_t *buffer, size_t size);
+struct fastjpeg_dht_s *fastjpeg_dht_extract(struct fastjpeg_dht_s *dht,
+	uint8_t *buffer, size_t size);
 void fastjpeg_dht_delete(struct fastjpeg_dht_s *dht);
 
 void fastjpeg_dht_dump(struct fastjpeg_dht_s *dht);
