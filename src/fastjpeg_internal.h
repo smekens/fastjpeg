@@ -160,6 +160,15 @@ void fastjpeg_dht_dump(struct fastjpeg_dht_s *dht);
 
 /**/
 
+typedef struct fastjpeg_huffman_lookup_s
+{
+	uint16_t mask;
+	uint16_t bits;
+	uint8_t code;
+	size_t bitlen;
+
+} fastjpeg_huffman_lookup_t;
+
 typedef struct fastjpeg_huffman_table_s
 {
 	enum
@@ -171,6 +180,9 @@ typedef struct fastjpeg_huffman_table_s
 	uint8_t id;
 
 	uint8_t code_length_list[16];
+
+	size_t lookup_size;
+	struct fastjpeg_huffman_lookup_s *lookup;
 
 	struct fastjpeg_huffman_table_s *prev, *next;
 

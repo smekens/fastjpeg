@@ -38,13 +38,45 @@ fastjpeg_dht_t *fastjpeg_dht_extract(fastjpeg_dht_t *dht, uint8_t *buffer, size_
 
 	memcpy(table->code_length_list, buffer + 1, 16);
 
-	/* Calculate lengths */
-	int i, length;
-	for(i = 0, length = 0; i < 16; i ++) {
-		length += table->code_length_list[i];
+	/* Calculate lengths and build huffman codes */
+	int i, nb_code;
+	for(i = 0, nb_code = 0; i < 16; i ++) {
+		nb_code += table->code_length_list[i];
 	}
 
-	printf("---> %ld, %d\n", size, length);
+	/* Check if table currupted */
+	if(nb_code + 17 != size)
+	{
+		fastjpeg_huffman_table_delete(table);
+		printf("Error: dht table corrupted\n");
+		return dht;
+	}
+
+	table->lookup_size = nb_code;
+	table->lookup = (fastjpeg_huffman_lookup_t *) fastjpeg_malloc(nb_code * sizeof(fastjpeg_huffman_lookup_t));
+
+	size_t bitlen;
+	size_t dht_idx = 0;
+	size_t lookup_idx = 0;
+	uint16_t code_val = 0;
+	uint8_t *data_ptr = buffer + 17;
+
+	for(bitlen = 0; bitlen < 16; bitlen++)
+	{
+		for(i = 0; i < table->code_length_list[bitlen]; i++)
+		{
+			table->lookup[lookup_idx].mask = 0xFFFF >> (16 - bitlen);
+			table->lookup[lookup_idx].bits = code_val;
+			table->lookup[lookup_idx].code = *(data_ptr + dht_idx);
+			table->lookup[lookup_idx].bitlen = bitlen;
+
+			lookup_idx++;
+			code_val++;
+			dht_idx++;
+		}
+
+		code_val <<= 1;
+	}
 
 	ctnr_list_add(dht->table_list, table);
 
@@ -60,7 +92,7 @@ void fastjpeg_dht_delete(fastjpeg_dht_t *dht)
 	while((table = ctnr_list_get_head(dht->table_list)) != NULL)
 	{
 		ctnr_list_del(dht->table_list, table);
-		fastjpeg_free(table);
+		fastjpeg_huffman_table_delete(table);
 	}
 
 	fastjpeg_free(dht);
@@ -70,44 +102,35 @@ void fastjpeg_dht_delete(fastjpeg_dht_t *dht)
 
 void fastjpeg_dht_dump(fastjpeg_dht_t *dht)
 {
-	int nr = 0;
+	int i, nr = 0;
 	fastjpeg_huffman_table_t *table;
 
 	printf("DUMP: ===== Describe Huffman Table\n");
 	ctnr_list_foreach(dht->table_list, table, nr)
 	{
-		printf("DUMP:    table class: %d\n", table->table_class);
 		printf("DUMP:    id: %d\n", table->id);
 
-		int i;
-		printf("DUMP:    code length: ");
-		for(i = 0; i < 16; i++) {
-			printf("%03d ", table->code_length_list[i]);
+		switch(table->table_class)
+		{
+			case FASTJPEG_HUFFMAN_TABLE_CLASS_DC:
+				printf("DUMP:    class: DC\n");
+				break;
+
+			case FASTJPEG_HUFFMAN_TABLE_CLASS_AC:
+				printf("DUMP:    class: AC\n");
+				break;
 		}
-		printf("\n");
-	}
 
+		printf("DUMP:    Lookup codes: (mask, bit, code, bitlen)\n");
+		for(i = 0; i < table->lookup_size; i++)
+		{
+			printf("DUMP:      %4x, %4x, %4x, %4lx\n",
+				table->lookup[i].mask, table->lookup[i].bits,
+				table->lookup[i].code, table->lookup[i].bitlen);
+		}
 
-
-/*
-	printf("DUMP: ===== Start Of Frame\n");
-	printf("DUMP:    precision: %d\n", dht->precision);
-	printf("DUMP:    width: %d\n", dht->width);
-	printf("DUMP:    height: %d\n", dht->height);
-	printf("DUMP:    nb_component: %d\n", dht->nb_component);
-
-	int i;
-	for(i = 0; i < dht->nb_component; i++)
-	{
 		printf("DUMP:\n");
-		printf("DUMP:    -- Component %d\n", dht->components[i].id);
-		printf("DUMP:       h_sampling: %d\n", dht->components[i].h_sampling);
-		printf("DUMP:       v_sampling: %d\n", dht->components[i].v_sampling);
-		printf("DUMP:       dqt_id: %d\n", dht->components[i].dqt_id);
 	}
-
-	printf("DUMP:\n");
-*/
 }
 
 
@@ -120,7 +143,8 @@ fastjpeg_huffman_table_t *fastjpeg_huffman_table_new(void)
 
 void fastjpeg_huffman_table_delete(fastjpeg_huffman_table_t *table)
 {
-
+	if(table->lookup != NULL) fastjpeg_free(table->lookup);
+	fastjpeg_free(table);
 }
 
 /*--------------------------------------------------------------------------*/

@@ -132,20 +132,16 @@ bool fastjpeg_prepare_in(fastjpeg_t *fastjpeg)
 		/* Read marker */
 		if(fastjpeg_read_word(fastjpeg, &marker) == false) return false;
 
-		printf("DUMP: ===== Marker 0x%04x (%d)\n", marker, i);
+		printf("DUMP: --- Marker 0x%04x (%d)\n", marker, i);
 
 		switch(marker)
 		{
 			case FASTJPEG_MARKER_SOI:
 				fastjpeg->found_soi = true;
-				printf("DUMP: ===== SOI\n");
-				printf("DUMP:\n");
 				break;
 
 			case FASTJPEG_MARKER_EOI:
 				fastjpeg->found_eoi = true;
-				printf("DUMP: ===== EOI\n");
-				printf("DUMP:\n");
 				goto END_LOOP;
 				break;
 
@@ -156,7 +152,6 @@ bool fastjpeg_prepare_in(fastjpeg_t *fastjpeg)
 				buffer = (uint8_t *) fastjpeg_malloc(size);
 				if(fastjpeg_read_buffer(fastjpeg, buffer, size) == false) return false;
 				fastjpeg->jfif_header = fastjpeg_jfif_header_extract(buffer, size);
-				fastjpeg_jfif_header_dump(fastjpeg->jfif_header);
 				fastjpeg_free(buffer);
 				break;
 
@@ -168,7 +163,6 @@ bool fastjpeg_prepare_in(fastjpeg_t *fastjpeg)
 				if(fastjpeg_read_buffer(fastjpeg, buffer, size) == false) return false;
 				fastjpeg_dqt_t *dqt = fastjpeg_dqt_extract(buffer, size);
 				fastjpeg->dqt[dqt->id] = dqt;
-				fastjpeg_dqt_dump(dqt);
 				fastjpeg_free(buffer);
 				break;
 
@@ -179,7 +173,6 @@ bool fastjpeg_prepare_in(fastjpeg_t *fastjpeg)
 				buffer = (uint8_t *) fastjpeg_malloc(size);
 				if(fastjpeg_read_buffer(fastjpeg, buffer, size) == false) return false;
 				fastjpeg->sof = fastjpeg_sof_extract(buffer, size);
-				fastjpeg_sof_dump(fastjpeg->sof);
 				fastjpeg_free(buffer);
 				break;
 
@@ -190,64 +183,24 @@ bool fastjpeg_prepare_in(fastjpeg_t *fastjpeg)
 				buffer = (uint8_t *) fastjpeg_malloc(size);
 				if(fastjpeg_read_buffer(fastjpeg, buffer, size) == false) return false;
 				fastjpeg->dht = fastjpeg_dht_extract(fastjpeg->dht, buffer, size);
-				fastjpeg_dht_dump(fastjpeg->dht);
 				fastjpeg_free(buffer);
 				break;
 
 			case FASTJPEG_MARKER_SOS:
-				if(fastjpeg_read_word(fastjpeg, &size) == false) return false;
-				size -= 2;
-
-				printf("Reading SOS section. Size: %d\n", size);
-
-//				fastjpeg->marker->data[4] = (uint8_t *) fastjpeg_malloc(size);
-//				if(fastjpeg->marker->data[4] == NULL) return false;
-//				if(fastjpeg_read_buffer(fastjpeg, fastjpeg->marker->data[4], size) == false) return false;
-				break;
-
-//			default:
-//				if(marker < 0xFFC0) return false;
-//
-//				if(fastjpeg_read_word(fastjpeg, &size) == false) return false;
-//
-//				buff = (uint8_t *) fastjpeg_malloc(size);
-//				fastjpeg->marker->app_size[marker & 0x3F] = size;
-//				fastjpeg->marker->app_data[marker & 0x3F] = buff;
-//
-//				break;
+				fastjpeg->found_sos = true;
+				goto END_LOOP;
 
 			default:
 				printf("Error: marker not valid 0x%04x\n", marker);
+				goto END_LOOP;
 				return false;
 		}
 	}
 
 END_LOOP:
-	return true;
+	fastjpeg_dump(fastjpeg);
 
-//	/* Read JFIF header */
-//	fastjpeg->io->read(fastjpeg->io->descr, (uint8_t *) &marker, sizeof(marker));
-//	if(endian_word(marker) != FASTJPEG_MARKER_APP0) return false;
-//	fastjpeg->io->read(fastjpeg->io->descr, (uint8_t *) &length, sizeof(length));
-//
-//	buff = (uint8_t *) fastjpeg_realloc(buff, length);
-//	fastjpeg->io->read(fastjpeg->io->descr, buff, length);
-//
-//	fastjpeg_jfif_header_t *jfif_header = fastjpeg_jfif_header_extract(buff, length);
-//	if(jfif_header == NULL) return false;
-//
-//	fastjpeg->jfif_header = jfif_header;
-//
-//	printf("Identifier: %c%c%c%c%c\n", jfif_header->id[0], jfif_header->id[1],
-//		jfif_header->id[2], jfif_header->id[3], jfif_header->id[4]);
-//	printf("Version: %d.%d\n", jfif_header->version_major, jfif_header->version_minor);
-//	printf("Units: %d\n", jfif_header->units);
-//	printf("Density: %d, %d\n", jfif_header->x_density, jfif_header->y_density);
-//	printf("Thumb: %d, %d\n", jfif_header->x_thumbnail, jfif_header->y_thumbnail);
-//
-//	fastjpeg_free(buff);
-//
-//	return true;
+	return true;
 }
 
 /*--------------------------------------------------------------------------*/
@@ -287,9 +240,46 @@ bool fastjpeg_prepare(fastjpeg_t *fastjpeg)
 
 /*--------------------------------------------------------------------------*/
 
-bool fastjpeg_terminate(struct fastjpeg_s *fastjpeg)
+bool fastjpeg_terminate(fastjpeg_t *fastjpeg)
 {
 	return false;
+}
+
+/*--------------------------------------------------------------------------*/
+
+void fastjpeg_dump(fastjpeg_t *fastjpeg)
+{
+	int i;
+
+	printf("DUMP:\n");
+	if(fastjpeg->found_soi == true)
+	{
+		printf("DUMP: ===== SOI\n");
+		printf("DUMP:\n");
+	}
+
+	fastjpeg_jfif_header_dump(fastjpeg->jfif_header);
+	for(i = 0; i < 4; i++)
+	{
+		if(fastjpeg->dqt[i] != NULL) {
+			fastjpeg_dqt_dump(fastjpeg->dqt[i]);
+		}
+	}
+
+	fastjpeg_sof_dump(fastjpeg->sof);
+	fastjpeg_dht_dump(fastjpeg->dht);
+
+	if(fastjpeg->found_sos == true)
+	{
+		printf("DUMP: ===== SOS\n");
+		printf("DUMP:\n");
+	}
+
+	if(fastjpeg->found_eoi == true)
+	{
+		printf("DUMP: ===== EOI\n");
+		printf("DUMP:\n");
+	}
 }
 
 /*--------------------------------------------------------------------------*/

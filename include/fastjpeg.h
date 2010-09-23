@@ -35,6 +35,7 @@ typedef struct fastjpeg_s
 
 	bool found_soi;
 	bool found_eoi;
+	bool found_sos;
 
 	struct fastjpeg_jfif_header_s *jfif_header;
 	struct fastjpeg_dqt_s *dqt[4];
@@ -57,6 +58,8 @@ void fastjpeg_buffer_src(struct fastjpeg_s *fastjpeg, uint8_t *buff, size_t size
 
 bool fastjpeg_read_scanline(struct fastjpeg_s *fastjpeg, uint8_t *buff);
 bool fastjpeg_write_scanline(struct fastjpeg_s *fastjpeg, uint8_t *buff);
+
+void fastjpeg_dump(struct fastjpeg_s *fastjpeg);
 
 /*--------------------------------------------------------------------------*/
 /* MEMORY																    */
